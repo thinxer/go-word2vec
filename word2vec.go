@@ -111,6 +111,45 @@ func (m *Model) MostSimilar(word string, n int) ([]Pair, error) {
 	return r, nil
 }
 
+// Return the most similiar n words to (b - a + c).
+func (m *Model) Analogy(a, b, c string, n int) ([]Pair, error) {
+	var ids [3]int
+	for i, w := range []string{a, b, c} {
+		id, ok := m.Vocab[w]
+		if !ok {
+			return nil, fmt.Errorf("Word not found: %s", w)
+		}
+		ids[i] = id
+	}
+
+	vec := Vector(make([]float32, m.Layer1Size))
+	add(vec, m.Vector(ids[0]), -1)
+	add(vec, m.Vector(ids[1]), 1)
+	add(vec, m.Vector(ids[2]), 1)
+	vec.Normalize()
+
+	r := make([]Pair, n)
+	for w, i := range m.Vocab {
+		if i == ids[0] || i == ids[1] || i == ids[2] {
+			continue
+		}
+		sim := dot(m.Vector(i), vec)
+		this := Pair{w, sim}
+		for j := 0; j < n; j++ {
+			if this.Sim > r[j].Sim {
+				this, r[j] = r[j], this
+			}
+		}
+	}
+	return r, nil
+}
+
+func add(x, y Vector, m float32) {
+	for i, v := range y {
+		x[i] += v * m
+	}
+}
+
 func dot(x, y Vector) float32 {
 	var w float32
 	for i, v := range x {
