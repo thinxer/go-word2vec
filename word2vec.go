@@ -73,25 +73,25 @@ func (m *Model) Similarity(x, y string) (float32, error) {
 	if !ok {
 		return 0, fmt.Errorf("Word not found: %s", y)
 	}
-	return dot(m.Vector(id1), m.Vector(id2)), nil
+	return m.Vector(id1).Dot(m.Vector(id2)), nil
 }
 
 // MostSimilar returns the most similiar n words to sum(positives) - sum(negatives).
 func (m *Model) MostSimilar(positives, negatives []string, n int) ([]Pair, error) {
-	// Construct the vector from positives - negatives.
+	// Construct the target vector.
 	vec := Vector(make([]float32, m.Layer1Size))
 	for _, word := range positives {
 		if wordId, ok := m.Vocab[word]; !ok {
 			return nil, fmt.Errorf("Word not found: %s", word)
 		} else {
-			add(vec, m.Vector(wordId), 1)
+			vec.Add(1, m.Vector(wordId))
 		}
 	}
 	for _, word := range negatives {
 		if wordId, ok := m.Vocab[word]; !ok {
 			return nil, fmt.Errorf("Word not found: %s", word)
 		} else {
-			add(vec, m.Vector(wordId), -1)
+			vec.Add(1, m.Vector(wordId))
 		}
 	}
 	vec.Normalize()
@@ -99,7 +99,7 @@ func (m *Model) MostSimilar(positives, negatives []string, n int) ([]Pair, error
 	// Find the top similar words.
 	r := make([]Pair, n)
 	for w, i := range m.Vocab {
-		sim := dot(m.Vector(i), vec)
+		sim := vec.Dot(m.Vector(i))
 		this := Pair{w, sim}
 		for j := 0; j < n; j++ {
 			if this.Sim > r[j].Sim {

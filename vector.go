@@ -1,27 +1,19 @@
 package word2vec
 
-import "math"
+import "github.com/ziutek/blas"
 
 type Vector []float32
 
 // Normalize this vector.
 func (v Vector) Normalize() {
-	w := float32(math.Sqrt(float64(dot(v, v))))
-	for i := range v {
-		v[i] = v[i] / w
-	}
+	w := blas.Snrm2(len(v), v, 1)
+	blas.Sscal(len(v), 1/w, v, 1)
 }
 
-func add(x, y Vector, m float32) {
-	for i, v := range y {
-		x[i] += v * m
-	}
+func (y Vector) Add(alpha float32, x Vector) {
+	blas.Saxpy(len(y), alpha, x, 1, y, 1)
 }
 
-func dot(x, y Vector) float32 {
-	var w float32
-	for i, v := range x {
-		w += v * y[i]
-	}
-	return w
+func (y Vector) Dot(x Vector) float32 {
+	return blas.Sdot(len(y), x, 1, y, 1)
 }
