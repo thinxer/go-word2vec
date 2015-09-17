@@ -91,7 +91,7 @@ func (m *Model) MostSimilar(positives, negatives []string, n int) ([]Pair, error
 		if wordId, ok := m.Vocab[word]; !ok {
 			return nil, fmt.Errorf("Word not found: %s", word)
 		} else {
-			vec.Add(1, m.Vector(wordId))
+			vec.Add(-1, m.Vector(wordId))
 		}
 	}
 	vec.Normalize()
